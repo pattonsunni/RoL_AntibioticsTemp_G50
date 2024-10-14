@@ -13,8 +13,7 @@ library(ggplot2)
 library(phyloseq)
 
 ## Load data ====
-readRDS(here::here("Output files/02 - Phyloseq Preprocessing - Output/ps.All.rds"))
-
+readRDS(here::here("Output files/02 - Phyloseq Preprocessing - Output/ps.All.rds")) -> ps.All
 ## Plot sample library size ====
 df <- as.data.frame(sample_data(ps.All)) 
 df$LibrarySize <- sample_sums(ps.All)
@@ -46,6 +45,7 @@ df.presAbs <- data.frame(presAbs.pos=taxa_sums(ps.presAbs.pos), presAbs.neg=taxa
                          contaminant=contamdf_combined$contaminant)
 plot.presAbs <- ggplot(data=df.presAbs, aes(x=presAbs.neg, y=presAbs.pos, color=contaminant)) + geom_point() +
   xlab("Prevalence/Frequency (Negative Controls)") + ylab("Prevalence/Frequency (True Samples)")
+# Looks like there are two taxa with somewhat high prevalence in negative controls that aren't considered contaminants -> need to look into these
 
 ## Save plot ====
 ggplot2::ggsave(here::here("Output Files/03 - Decontam - Output/plot_presAbs.png"), plot.presAbs,
@@ -53,19 +53,31 @@ ggplot2::ggsave(here::here("Output Files/03 - Decontam - Output/plot_presAbs.png
                 scale = 0.5, dpi = 1000)
 
 ## Remove contaminants ====
-ps.nocontam <- prune_taxa(!contamdf_combined$contaminant, ps.All) # Contains 3980 ASVs after contaminants removed
+### Make phyloseq object for contaminants only 
+ps.contam <- prune_taxa(contamdf_combined$contaminant, ps.All) # Contains 168 ASVs (as expected)
+View(ps.contam@tax_table) # identified an Aquarickettsia ASV as a contaminant 
+ps.contam <- prune_taxa(taxa_sums(ps.contam@otu_table) > 0, ps.contam)
+summary(taxa_sums(ps.contam))
 
-summary(taxa_sums(ps.nocontam)) 
+## Make phyloseq object with contaminants removed
+ps.nocontam <- prune_taxa(!contamdf_combined$contaminant, ps.All) 
+ps.nocontam <- prune_taxa(taxa_sums(ps.nocontam@otu_table) > 0, ps.nocontam) # Contains 4739 ASVs after contaminants removed
+summary(taxa_sums(ps.nocontam)) # Least abundant taxon/taxa has 2 reads overall, highest abundance taxon has 11,278,922
 
-sum(ps.nocontam@otu_table) 
-sum(ps.All@otu_table) - sum(ps.nocontam@otu_table)
+sum(ps.nocontam@otu_table) # 12,065,466 reads
+sum(ps.All@otu_table) - sum(ps.nocontam@otu_table) # 9,109 reads were contaminants
 saveRDS(ps.nocontam, here::here("Output Files/03 - Decontam - Output/ps.nocontam.rds"))
 
 ## Make phyloseq object with NCs removed ====
-subset_samples(ps.nocontam, Antibiotic != "Negative Control") -> ps.noneg
+### Make phyloseq object with just NCs (for ps.All and ps.nocontam)
+subset_samples(ps.nocontam, Treatment != "Negative Control") -> ps.noneg
+
+subset_samples(ps.nocontam, Treatment != "Negative Control") -> ps.noneg
 
 ### Phyloseq object summary
 ps.noneg <- prune_taxa(taxa_sums(ps.noneg@otu_table) > 0, ps.noneg) 
 
 summary(taxa_sums(ps.noneg@otu_table))
 sort(sample_sums(ps.noneg@otu_table)) 
+
+saveRDS(ps.noneg, here::here("Output Files/03 - Decontam - Output/ps.noneg.rds"))
