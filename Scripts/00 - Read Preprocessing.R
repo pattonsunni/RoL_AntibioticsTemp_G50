@@ -1,5 +1,5 @@
 # Author: Sunni Patton
-# Last edited: 07/09/2024
+# Last edited: 10/17/2024
 # Title: Read preprocessing
 
 ## Load libraries ====
@@ -38,16 +38,13 @@ out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen = c(250, 200),
 saveRDS(out, here::here("Output Files/00 - Read Preprocessing - Output/out.rds"))
 
 ## Assess number of reads lost
-sum(out[,1])-sum(out[,2]) # 14117956 initially, 13255777 remaining
+sum(out[,1])-sum(out[,2]) # 13388056 initially, 12608343 remaining, 779713 lost
 
 ## Learn errors and infer sample sequence ====
 errF <- learnErrors(filtFs, multithread = FALSE, nbases = 5e8)  
-#554,573,250 total bases in 2218293 reads from 21 samples will be used for learning the error rates.
-
 saveRDS(errF, here::here("Output Files/00 - Read Preprocessing - Output/errF.rds"))
 
 errR <- learnErrors(filtRs,multithread = FALSE, nbases = 5e8) 
-#501909200  total bases in 2509546 reads from 24 samples samples will be used for learning the error rates.
 saveRDS(errR, here::here("Output Files/00 - Read Preprocessing - Output/errR.rds"))
 
 ## Ensure sample naming is consistent
@@ -71,23 +68,23 @@ dim(seq_table)
 table(nchar(getSequences(seq_table)))
 
 ### Keep contigs within desired size range
-seq_table <- seq_table[,nchar(colnames(seq_table)) %in% 252:255]
-table(nchar(getSequences(seq_table))) # number of samples and number of total contigs
-dim(seq_table) # 7112 contigs across 157 samples
-sum(seq_table) # 13135368 total reads
+seq_table <- seq_table[,nchar(colnames(seq_table)) %in% 250:256]
+table(nchar(getSequences(seq_table))) 
+dim(seq_table) 
+sum(seq_table) 
 
 ## Save output
 saveRDS(seq_table, here::here("Output Files/00 - Read Preprocessing - Output/seq_table.rds"))
 
 ## Remove chimeras ====
-seq_table_nochimeri <- removeBimeraDenovo(seq_table, method="consensus", multithread=TRUE, verbose=TRUE) # Identified 779 bimeras
-dim(seq_table_nochimeri) # 6333 contigs
-sum(seq_table) - sum(seq_table_nochimeri) # 73,792 reads removed
+seq_table_nochimeri <- removeBimeraDenovo(seq_table, method="consensus", multithread=TRUE, verbose=TRUE) 
+dim(seq_table_nochimeri) 
+sum(seq_table) - sum(seq_table_nochimeri) 
 
 saveRDS(seq_table_nochimeri, here::here("Output Files/00 - Read Preprocessing - Output/seq_table_nochimeri.rds"))
 
 ## Assign taxonomy ====
-taxa <- assignTaxonomy(seq_table_nochimeri, here::here("silva_nr99_v138.1_train_set.fa.gz"), multithread=FALSE)
+taxa <- assignTaxonomy(seq_table_nochimeri, here::here("silva_nr99_v138.1_train_set.fa.gz"), multithread=FALSE, minBoot = 80)
 taxa <- addSpecies(taxa, here::here("silva_species_assignment_v138.1.fa.gz"))
 
 saveRDS(taxa, here::here("Output Files/00 - Read Preprocessing - Output/taxa.rds")) 
@@ -96,8 +93,8 @@ saveRDS(taxa, here::here("Output Files/00 - Read Preprocessing - Output/taxa.rds
 ### New sequence table (no chloroplast)
 is.chloroplast <- taxa[,"Order"] %in% "Chloroplast"
 seq_table_nochloro <- seq_table_nochimeri[,!is.chloroplast]
-dim(seq_table_nochloro) #6075 taxa
-sum(seq_table_nochimeri) - sum(seq_table_nochloro) # 548,654 reads removed
+dim(seq_table_nochloro) #5131 taxa
+sum(seq_table_nochimeri) - sum(seq_table_nochloro) 
 saveRDS(seq_table_nochloro, here::here("Output Files/00 - Read Preprocessing - Output/seq_table_nochloro.rds"))
 
 ### New taxonomy table (no chloroplast)
@@ -109,8 +106,8 @@ saveRDS(taxonomy_nochloro, here::here("Output Files/00 - Read Preprocessing - Ou
 ### New sequence table (no mitochondria or chloroplast)
 is.mitochondria <- taxonomy_nochloro[,"Family"] %in% "Mitochondria"
 seq_table_nomito <- seq_table_nochloro[,!is.mitochondria]
-dim(seq_table_nomito) #5934 taxa
-sum(seq_table_nochloro) - sum(seq_table_nomito) # 11847 reads removed
+dim(seq_table_nomito) #5004 taxa
+sum(seq_table_nochloro) - sum(seq_table_nomito) 
 saveRDS(seq_table_nomito, here::here("Output Files/00 - Read Preprocessing - Output/seq_table_nomito.rds"))
 
 ### New taxonomy table (no mitochondria or chloroplast)
@@ -122,8 +119,8 @@ saveRDS(taxonomy_nomito, here::here("Output Files/00 - Read Preprocessing - Outp
 ## Remove sequences not annotated beyond the Kingdom level
 is.NA <- taxonomy_nomito[,"Phylum"] %in% NA
 seq_table_noNA <- seq_table_nomito[,!is.NA]
-dim(seq_table_noNA) #5847 taxa
-sum(seq_table_nomito) - sum(seq_table_noNA) #761 reads removed
+dim(seq_table_noNA) 
+sum(seq_table_nomito) - sum(seq_table_noNA) 
 saveRDS(seq_table_noNA, here::here("Output Files/00 - Read Preprocessing - Output/seq_table_noNA.rds"))
 
 taxonomy_noNA <- taxonomy_nomito[!is.NA,]
@@ -131,13 +128,13 @@ dim(taxonomy_noNA)
 saveRDS(taxonomy_noNA, here::here("Output Files/00 - Read Preprocessing - Output/taxonomy_noNA.rds"))
 
 ## Assess total number of reads removed and ASV frequency ====
-sum(seq_table_noNA) # 12,500,314 reads left after quality control
-dim(seq_table_noNA) # 5847 contigs left after quality control
+sum(seq_table_noNA) 
+dim(seq_table_noNA) 
 
-summary(colSums(seq_table_noNA)) # Minimum taxon reads = 2; maximum taxon reads = 11480061
-summary(rowSums(seq_table_noNA)) # Minimum reads in a sample is 765 
+summary(colSums(seq_table_noNA)) 
+summary(rowSums(seq_table_noNA))  
 
-sort(rowSums(seq_table_noNA)) # Sample with 765 reads is a negative control 
+sort(rowSums(seq_table_noNA)) 
 
 ## Tracking reads removed at each step ====
 getN <- function(x) sum(getUniques(x))
@@ -145,10 +142,9 @@ track <- cbind(out, sapply(dadaForward, getN), sapply(dadaReverse, getN), sapply
 colnames(track) <- c("input", "filtered", "denoisedF", "denoisedR", "merged", "nonchim", "nochloro", "nomito", "noNA.phylum")
 
 ### Update sample names based on track_G7 rows (simply forcing column names to be sampleNames incorrectly assigns the names)
-sampleNames_new <- sapply(strsplit(basename(rownames(track)), "-"), `[`,7) # Removes all beginning information, but still left with information at the end (S#_R1_001.fastq.gz)
-sampleNames_new <- sapply(strsplit(basename(sampleNames_new), "\\."), `[`,1) # Removes fastq.gz at the end, but still left with the _S*_R1_001
+sampleNames_new <- sapply(strsplit(rownames(track), "-"), `[`,7) 
+sampleNames_new <- sapply(strsplit(basename(sampleNames_new), "\\."), `[`,1) 
 sampleNames_new <- gsub("_S\\d+\\d?\\d?\\d?_R1_001", "", sampleNames_new) 
-sampleNames_new
 
 ### Assign new row names (shorter sample name) using sampleNames_new
 rownames(track) <- sampleNames_new
