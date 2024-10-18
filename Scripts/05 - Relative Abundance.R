@@ -416,34 +416,16 @@ abxtemp_MRA <- abxtemp_MRA +
 ## Combine data and plot ====
 rbind(blank.relabund, abx.relabund, temp.relabund, abxtemp.relabund) -> relabund.All
 
-## ====
+relabund.All$Treatment <- factor(relabund.All$Treatment, c("No Treatment", "Antibiotics Only", "Temperature Only", "Antibiotics & Temperature"), ordered = TRUE)
 
-as.data.frame(ps.top20.blank.T0@otu_table) %>%
-  summarise(mean = mean(ASV4), sd = sd(ASV4))
+MRA.all <- ggplot(data = relabund.All, aes(x = Time, y = mean, fill = GenusASV)) + 
+  geom_bar(stat = "identity") + facet_wrap(~Treatment)
 
+MRA.all <- MRA.all + 
+  xlab("Time (Days)") + ylab("Mean Relative Abundance (%)") + guides(fill = guide_legend(title = "Genus")) + 
+  theme_bw() + theme(axis.text = element_text(face = "bold", size = 11.5), axis.title = element_text(face = "bold", size = 12), title = element_text(face = "bold")) +
+  theme(strip.text = element_text(face = "bold", size = 12))
 
-
-
-as.data.frame(ps.rare.top20@otu_table) %>%
-  summarise(mean = mean(ASV3), sd = sd(ASV3))
-
-
-
-
-
-
-## Supplemental Figure 4
-plot.relAbund.all <- plot_bar(ps.rare.top20, x="Time", fill="Genus") + facet_wrap(~Treatment_Long) 
-  
-  
-  
-  facet_grid(vars(Time), vars(Treatment), scales = "free_x") 
-
-plot.relAbund.all <- plot.relAbund.all + theme_bw() + 
-  theme(axis.text.x = element_text(angle = 90, face = "bold", size = 11.5), 
-        axis.text.y = element_text(face = "bold", size = 11.5), title = element_text(face = "bold")) + xlab("Samples") + labs(title = "Relative Abundance")
-
-
-ggplot2::ggsave(here::here("Data/06 - Relative Abundance - Output/01 - plot_relabund_all.png"), plot.relAbund.all,
-                height = 450, width = 900, units = "mm",
+ggplot2::ggsave(here::here("Output Files/05 - Relative Abundance - Output/01 - plot_meanRelAbund_all.png"), MRA.all,
+                height = 450, widts = 700, units = "mm",
                 scale = 0.5, dpi = 1000)
