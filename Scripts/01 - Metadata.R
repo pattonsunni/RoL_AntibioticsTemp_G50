@@ -28,12 +28,14 @@ replicate <- as.character(sapply(strsplit(track$Samples, "G50_T\\d+\\_"), `[`, 2
 replicate <- as.character(sapply(strsplit(replicate, "_"), `[`, 2))
 
 coralID <- as.character(sapply(strsplit(track$Samples, "G50_"), `[`, 2))
-coralID <- as.character(sapply(strsplit(track$Samples, "T\\d+\\_"), `[`, 2))
+
+tankID <- as.character(sapply(strsplit(coralID, "T\\d+\\_"), `[`, 2))
 
 ### Make dataframe
 metadata <- data.frame(track$Samples)
 
 metadata$CoralID <- coralID
+metadata$TankID <- tankID
 metadata$Time <- time
 metadata$Treatment <- treatment
 metadata$TankReplicate <- replicate
@@ -86,16 +88,12 @@ metadata$Time_TempDays[metadata$Time_TotalDays == "24"] <- "20"
 metadata$Time_TempDays[metadata$Time_TotalDays == "29"] <- "25"
 metadata$Time_TempDays[metadata$Time_TotalDays == "34"] <- "30"
 
-## Save metadata file 
-readr::write_csv(metadata, here::here("Output Files/01 - Metadata - Output/metadata.csv"))
-
 ## Read in dna quant file and combine with metadata
 read.csv(here::here("DNA_quant.csv")) -> dna_quant
-merge(metadata, dna_quant, by = "Samples") -> meta_quant
-readr::write_csv(meta_quant, here::here("Output Files/01 - Metadata - Output/metadata_quant.csv"))
+merge(metadata, dna_quant, by = "Samples") -> metadata
 
 ## Add library size columns
 as.data.frame(c(track[1], track[2], track[10])) -> libSize
 colnames(libSize) <- c("Samples", "LibrarySize_PreQC", "LibrarySize_PostQC")
-merge(meta_quant, libSize) -> meta_quant_lib
-readr::write_csv(meta_quant_lib, here::here("Output Files/01 - Metadata - Output/meta_quant_lib.csv"))
+merge(metadata, libSize) -> metadata
+readr::write_csv(metadata, here::here("Output Files/01 - Metadata - Output/metadata.csv"))
