@@ -40,6 +40,8 @@ for (i in 1:nrow(taxa_change)){
 
 tax_table(ps.rare) <- as.matrix(taxa_change)
 
+saveRDS(ps.rare, here::here("Output Files/05 - Relative Abundance - Output/ps.rare.rds"))
+
 ## Relative abundance ps object ====
 ps.rare.trans <- transform_sample_counts(ps.rare, function(OTU) OTU/sum(OTU))
 
@@ -427,5 +429,5 @@ MRA.all <- MRA.all +
   theme(strip.text = element_text(face = "bold", size = 12))
 
 ggplot2::ggsave(here::here("Output Files/05 - Relative Abundance - Output/01 - plot_meanRelAbund_all.png"), MRA.all,
-                height = 450, widts = 700, units = "mm",
+                height = 450, width = 700, units = "mm",
                 scale = 0.5, dpi = 1000)
