@@ -40,26 +40,30 @@ saveRDS(out, here::here("Output Files/00 - Read Preprocessing - Output/out.rds")
 ## Assess number of reads lost
 sum(out[,1])-sum(out[,2]) # 13388056 initially, 12608343 remaining, 779713 lost
 
+## Dereplicate reads
+derep_F <- derepFastq(filtFs)
+derep_R <- derepFastq(filtRs)
+
 ## Learn errors and infer sample sequence ====
-errF <- learnErrors(filtFs, multithread = FALSE, nbases = 5e8)  
+errF <- learnErrors(derep_F, multithread = FALSE, nbases = 5e8)  
 saveRDS(errF, here::here("Output Files/00 - Read Preprocessing - Output/errF.rds"))
 
-errR <- learnErrors(filtRs,multithread = FALSE, nbases = 5e8) 
+errR <- learnErrors(derep_R,multithread = FALSE, nbases = 5e8) 
 saveRDS(errR, here::here("Output Files/00 - Read Preprocessing - Output/errR.rds"))
 
 ## Ensure sample naming is consistent
-names(filtFs)<-sampleNames
-names(filtRs)<-sampleNames
+names(derep_F)<-sampleNames
+names(derep_R)<-sampleNames
 
 ## Infer sample sequence
-dadaForward <- dada(filtFs, err=errF, multithread=FALSE)
+dadaForward <- dada(derep_F, err=errF, multithread=FALSE)
 saveRDS(dadaForward, here::here("Output Files/00 - Read Preprocessing - Output/dadaForward.rds"))
 
-dadaReverse <- dada(filtRs, err=errR, multithread=FALSE)
+dadaReverse <- dada(derep_R, err=errR, multithread=FALSE)
 saveRDS(dadaReverse, here::here("Output Files/00 - Read Preprocessing - Output/dadaReverse.rds"))
 
 ## Create contigs and sequence table ====
-contigs <- mergePairs(dadaForward, filtFs, dadaReverse, filtRs)
+contigs <- mergePairs(dadaForward, derep_F, dadaReverse, derep_R)
 saveRDS(contigs, here::here("Output Files/00 - Read Preprocessing - Output/contigs.rds"))
 
 ## Make sequence table and visualize contig length and frequency

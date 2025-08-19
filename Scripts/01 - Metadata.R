@@ -49,21 +49,20 @@ metadata$Treatment[metadata$Samples == "NC_1" |
 
 metadata$Treatment_Long <- paste0(metadata$Treatment)
 
-metadata$Treatment_Long[metadata$Treatment == "0"] <- "Blank"
-metadata$Treatment_Long[metadata$Treatment == "1"] <- "Antibiotic"
+metadata$Treatment_Long[metadata$Treatment == "0"] <- "No Treatment"
+metadata$Treatment_Long[metadata$Treatment == "1"] <- "Antibiotics"
 metadata$Treatment_Long[metadata$Treatment == "2"] <- "Temperature"
-metadata$Treatment_Long[metadata$Treatment == "3"] <- "Antibiotic + Temperature"
+metadata$Treatment_Long[metadata$Treatment == "3"] <- "Antibiotics + Temperature"
 
 ## Add column to specify actual treatment start
 metadata$Pretreatment <- paste0(metadata$Treatment_Long)
 
 metadata$Pretreatment[metadata$Time == "0"] <- "No Treatment" # all T0
 metadata$Pretreatment[metadata$Treatment == "0"] <- "No Treatment" # all blank
+metadata$Pretreatment[metadata$Treatment == "1" & metadata$Time != "0"] <- "Antibiotics"  
 metadata$Pretreatment[metadata$Treatment == "2" & (metadata$Time == "2" | metadata$Time == "5")] <- "No Treatment"
-metadata$Pretreatment[metadata$Treatment == "3" & (metadata$Time == "2" | metadata$Time == "5")] <- "Antibiotics Only"
-metadata$Pretreatment[metadata$Treatment == "1" & metadata$Time != "0"] <- "Antibiotics Only"    
-metadata$Pretreatment[metadata$Time != "0" & metadata$Treatment == "2"] <- "Temperature Only" 
-metadata$Pretreatment[metadata$Pretreatment == "Antibiotic + Temperature"] <- "Antibiotics + Temperature" 
+metadata$Pretreatment[metadata$Treatment == "3" & (metadata$Time == "2" | metadata$Time == "5")] <- "Antibiotics"
+metadata$Pretreatment[metadata$Treatment == "2" & (metadata$Time == "10" | metadata$Time == "15" | metadata$Time == "20" | metadata$Time == "25" | metadata$Time == "30" | metadata$Time == "35")] <- "Temperature" 
 
 # Fix time column (end of antibiotic experiment was 96 hours, i.e., 4 days -- not 5. So 5 should be 4, and all times after that should be one less)
 metadata$Time_TotalDays <- paste0(metadata$Time)
