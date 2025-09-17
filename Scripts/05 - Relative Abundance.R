@@ -12,6 +12,7 @@ library(phyloseq)
 library(ggpubr)
 library(svglite)
 library(tidyverse)
+library(vegan)
 
 ## Load data ====
 readRDS(here::here("Output Files/04 - Phyloseq - Output/ps.rare.rds")) -> ps.rare
@@ -609,6 +610,7 @@ ggplot2::ggsave(here::here("Output Files/05 - Relative Abundance - Output/plot_R
                 height = 600, width = 1200, units = "mm",
                 scale = 0.5, dpi = 1000)
 
+
 ## Relative abundance when aquarickettsia removed ====
 ### load data
 ps.pruned <- readRDS(here::here("Output Files/04 - Phyloseq - Output/ps.pruned.RDS")) ## pruned data
@@ -661,3 +663,214 @@ top15_noASV1 <- names(sort(taxa_sums(ps.noASV1.rare.trans), decreasing = TRUE))[
 ## Prune top 15
 ps.rare.top15.noASV1 <- prune_taxa(top15_noASV1, ps.noASV1.rare.trans)
 
+## subset by phase
+# Add phase column
+ps.rare.top15.noASV1@sam_data$Phase <- paste0(ps.rare.top15.noASV1@sam_data$Time_TotalDays)
+
+ps.rare.top15.noASV1@sam_data$Phase[ps.rare.top15.noASV1@sam_data$Phase == "0"] <- "Antibiotic challenge" 
+ps.rare.top15.noASV1@sam_data$Phase[ps.rare.top15.noASV1@sam_data$Phase == "2"] <- "Antibiotic challenge"  
+ps.rare.top15.noASV1@sam_data$Phase[ps.rare.top15.noASV1@sam_data$Phase == "4"] <- "Antibiotic challenge"  
+ps.rare.top15.noASV1@sam_data$Phase[ps.rare.top15.noASV1@sam_data$Phase == "9"] <- "Temperature ramp"
+ps.rare.top15.noASV1@sam_data$Phase[ps.rare.top15.noASV1@sam_data$Phase == "14"] <- "Temperature ramp"  
+ps.rare.top15.noASV1@sam_data$Phase[ps.rare.top15.noASV1@sam_data$Phase == "19"] <- "Temperature challenge"  
+ps.rare.top15.noASV1@sam_data$Phase[ps.rare.top15.noASV1@sam_data$Phase == "24"] <- "Temperature challenge"  
+ps.rare.top15.noASV1@sam_data$Phase[ps.rare.top15.noASV1@sam_data$Phase == "29"] <- "Temperature challenge"  
+ps.rare.top15.noASV1@sam_data$Phase[ps.rare.top15.noASV1@sam_data$Phase == "34"] <- "Temperature challenge" 
+
+as.data.frame(ps.rare.top15.noASV1@tax_table) -> tax
+tax$GenusASV <- paste0(tax$Genus, " (", tax$ASV, ")")
+as.matrix(tax) -> tax
+tax_table(ps.rare.top15.noASV1) <- tax
+
+ps.rare.top15.noASV1@sam_data$CoralID <- gsub("T35", "T34", ps.rare.top15.noASV1@sam_data$CoralID, ignore.case = FALSE)
+ps.rare.top15.noASV1@sam_data$CoralID <- gsub("T30", "T29", ps.rare.top15.noASV1@sam_data$CoralID, ignore.case = FALSE)
+ps.rare.top15.noASV1@sam_data$CoralID <- gsub("T25", "T24", ps.rare.top15.noASV1@sam_data$CoralID, ignore.case = FALSE)
+ps.rare.top15.noASV1@sam_data$CoralID <- gsub("T20", "T19", ps.rare.top15.noASV1@sam_data$CoralID, ignore.case = FALSE)
+ps.rare.top15.noASV1@sam_data$CoralID <- gsub("T15", "T14", ps.rare.top15.noASV1@sam_data$CoralID, ignore.case = FALSE)
+ps.rare.top15.noASV1@sam_data$CoralID <- gsub("T10", "T9", ps.rare.top15.noASV1@sam_data$CoralID, ignore.case = FALSE)
+ps.rare.top15.noASV1@sam_data$CoralID <- gsub("T5", "T4", ps.rare.top15.noASV1@sam_data$CoralID, ignore.case = FALSE)
+
+ps.rare.top15.noASV1@sam_data$CoralID <- gsub("T9", "T09", ps.rare.top15.noASV1@sam_data$CoralID, ignore.case = FALSE)
+ps.rare.top15.noASV1@sam_data$CoralID <- gsub("T4", "T04", ps.rare.top15.noASV1@sam_data$CoralID, ignore.case = FALSE)
+
+
+## antibiotic challenge
+plot.abx.no.noASV1 <- plot_bar(subset_samples(ps.rare.top15.noASV1, (ps.rare.top15.noASV1@sam_data$Phase == "Antibiotic challenge") & ps.rare.top15.noASV1@sam_data$Pretreatment == "No Treatment"), x="CoralID", fill="GenusASV")
+plot.abx.no.noASV1 <- plot.abx.no.noASV1 + theme_bw() + guides(fill = guide_legend(title = "ASV")) +
+  theme(axis.text.x = element_text(angle = 90, face = "bold", size = 16), 
+        axis.text.y = element_text(face = "bold", size = 16), 
+        axis.title.y = element_text(face = "bold", size = 16), 
+        axis.title.x = element_blank(),
+        legend.position = "none",
+        panel.border = element_rect(fill = NA, colour = "black", linewidth = 1),
+        strip.background = element_rect(
+          color = "black", # Border color
+          fill = "white", # Background fill color of the strip
+          size = 1),
+        strip.text = element_text(face = "bold", size = 16)) + xlab("Samples") +
+  facet_wrap(~Pretreatment) + scale_fill_manual(values = colors.noASV1) + 
+  scale_y_continuous(labels = scales::label_percent(scale = 100, prefix = "", suffix = ""), limits = c(0,1)) + ylab("Relative Abundance (%)")
+
+plot.abx.abx.noASV1 <- plot_bar(subset_samples(ps.rare.top15.noASV1, (ps.rare.top15.noASV1@sam_data$Phase == "Antibiotic challenge") & ps.rare.top15.noASV1@sam_data$Pretreatment == "Antibiotics"), x="CoralID", fill="GenusASV")
+plot.abx.abx.noASV1 <- plot.abx.abx.noASV1 + theme_bw() + guides(fill = guide_legend(title = "ASV")) +
+  theme(axis.text.x = element_text(angle = 90, face = "bold", size = 16), 
+        axis.text.y = element_blank(), 
+        axis.title.y = element_blank(), 
+        axis.title.x = element_blank(),
+        legend.text = element_text(face = "bold", size = 12),
+        legend.title = element_text(face = "bold", size = 14),
+        panel.border = element_rect(fill = NA, colour = "black", linewidth = 1),
+        strip.background = element_rect(
+          color = "black", # Border color
+          fill = "white", # Background fill color of the strip
+          size = 1),
+        strip.text = element_text(face = "bold", size = 16)) + xlab("Samples") +
+  facet_grid(Phase~Pretreatment) + scale_fill_manual(values = colors.noASV1)  + scale_y_continuous(labels = scales::label_percent(scale = 100, prefix = "", suffix = "")) + ylab("Relative Abundance (%)")
+
+
+ggarrange(plot.abx.no.noASV1, plot.abx.abx.noASV1, legend = "none") -> plot.abx.challenge
+
+
+### ramp
+plot.ramp.no.noASV1 <- plot_bar(subset_samples(ps.rare.top15.noASV1, (ps.rare.top15.noASV1@sam_data$Phase == "Temperature ramp") & ps.rare.top15.noASV1@sam_data$Pretreatment == "No Treatment"), x="CoralID", fill="GenusASV")
+plot.ramp.no.noASV1 <- plot.ramp.no.noASV1 + theme_bw() + guides(fill = guide_legend(title = "ASV")) +
+  theme(axis.text.x = element_text(angle = 90, face = "bold", size = 16), 
+        axis.text.y = element_text(face = "bold", size = 16), 
+        axis.title.y = element_text(face = "bold", size = 16), 
+        axis.title.x = element_blank(),
+        legend.position = "none",
+        panel.border = element_rect(fill = NA, colour = "black", linewidth = 1),
+        strip.background = element_rect(
+          color = "black", # Border color
+          fill = "white", # Background fill color of the strip
+          size = 1),
+        strip.text = element_text(face = "bold", size = 16)) + xlab("Samples") +
+  facet_wrap(~Pretreatment) + scale_fill_manual(values = colors.noASV1) + 
+  scale_y_continuous(labels = scales::label_percent(scale = 100, prefix = "", suffix = ""), limits = c(0,1)) + ylab("Relative Abundance (%)")
+
+plot.ramp.abx.noASV1 <- plot_bar(subset_samples(ps.rare.top15.noASV1, (ps.rare.top15.noASV1@sam_data$Phase == "Temperature ramp") & ps.rare.top15.noASV1@sam_data$Pretreatment == "Antibiotics"), x="CoralID", fill="GenusASV")
+plot.ramp.abx.noASV1 <- plot.ramp.abx.noASV1 + theme_bw() + guides(fill = guide_legend(title = "ASV")) +
+  theme(axis.text.x = element_text(angle = 90, face = "bold", size = 16), 
+        axis.text.y = element_blank(), 
+        axis.title.y = element_blank(), 
+        axis.title.x = element_blank(),
+        legend.position = "none",
+        panel.border = element_rect(fill = NA, colour = "black", linewidth = 1),
+        strip.background = element_rect(
+          color = "black", # Border color
+          fill = "white", # Background fill color of the strip
+          size = 1),
+        strip.text = element_text(face = "bold", size = 16)) + xlab("Samples") +
+  facet_wrap(~Pretreatment) + scale_fill_manual(values = colors.noASV1) + 
+  scale_y_continuous(labels = scales::label_percent(scale = 100, prefix = "", suffix = ""), limits = c(0,1)) + ylab("Relative Abundance (%)")
+
+plot.ramp.temp.noASV1 <- plot_bar(subset_samples(ps.rare.top15.noASV1, (ps.rare.top15.noASV1@sam_data$Phase == "Temperature ramp") & ps.rare.top15.noASV1@sam_data$Pretreatment == "Temperature"), x="CoralID", fill="GenusASV")
+plot.ramp.temp.noASV1 <- plot.ramp.temp.noASV1 + theme_bw() + guides(fill = guide_legend(title = "ASV")) +
+  theme(axis.text.x = element_text(angle = 90, face = "bold", size = 16), 
+        axis.text.y = element_blank(), 
+        axis.title.y = element_blank(), 
+        axis.title.x = element_blank(),
+        legend.position = "none",
+        panel.border = element_rect(fill = NA, colour = "black", linewidth = 1),
+        strip.background = element_rect(
+          color = "black", # Border color
+          fill = "white", # Background fill color of the strip
+          size = 1),
+        strip.text = element_text(face = "bold", size = 16)) + xlab("Samples") +
+  facet_wrap(~Pretreatment) + scale_fill_manual(values = colors.noASV1) + 
+  scale_y_continuous(labels = scales::label_percent(scale = 100, prefix = "", suffix = ""), limits = c(0,1)) + ylab("Relative Abundance (%)")
+
+
+plot.ramp.abxtemp.noASV1 <- plot_bar(subset_samples(ps.rare.top15.noASV1, (ps.rare.top15.noASV1@sam_data$Phase == "Temperature ramp") & ps.rare.top15.noASV1@sam_data$Pretreatment == "Antibiotics + Temperature"), x="CoralID", fill="GenusASV")
+plot.ramp.abxtemp.noASV1 <- plot.ramp.abxtemp.noASV1 + theme_bw() + guides(fill = guide_legend(title = "ASV")) +
+  theme(axis.text.x = element_text(angle = 90, face = "bold", size = 16), 
+        axis.text.y = element_blank(), 
+        axis.title.y = element_blank(), 
+        axis.title.x = element_blank(),
+        legend.text = element_text(face = "bold", size = 12),
+        legend.title = element_text(face = "bold", size = 14),
+        panel.border = element_rect(fill = NA, colour = "black", linewidth = 1),
+        strip.background = element_rect(
+          color = "black", # Border color
+          fill = "white", # Background fill color of the strip
+          size = 1),
+        strip.text = element_text(face = "bold", size = 16)) + xlab("Samples") +
+  facet_grid(Phase~Pretreatment) + scale_fill_manual(values = colors.noASV1)  + scale_y_continuous(labels = scales::label_percent(scale = 100, prefix = "", suffix = "")) + ylab("Relative Abundance (%)")
+
+ggarrange(plot.ramp.no.noASV1, plot.ramp.abx.noASV1, plot.ramp.temp.noASV1, plot.ramp.abxtemp.noASV1, ncol = 4, legend = "none") -> plot.ramp
+
+
+### temp
+plot.temp.no.noASV1 <- plot_bar(subset_samples(ps.rare.top15.noASV1, (ps.rare.top15.noASV1@sam_data$Phase == "Temperature challenge") & ps.rare.top15.noASV1@sam_data$Pretreatment == "No Treatment"), x="CoralID", fill="GenusASV")
+plot.temp.no.noASV1 <- plot.temp.no.noASV1 + theme_bw() + guides(fill = guide_legend(title = "ASV")) +
+  theme(axis.text.x = element_text(angle = 90, face = "bold", size = 16), 
+        axis.text.y = element_text(face = "bold", size = 16), 
+        axis.title.y = element_text(face = "bold", size = 16), 
+        axis.title.x = element_blank(),
+        legend.position = "none",
+        panel.border = element_rect(fill = NA, colour = "black", linewidth = 1),
+        strip.background = element_rect(
+          color = "black", # Border color
+          fill = "white", # Background fill color of the strip
+          size = 1),
+        strip.text = element_text(face = "bold", size = 16)) + xlab("Samples") +
+  facet_wrap(~Pretreatment) + scale_fill_manual(values = colors.noASV1) + 
+  scale_y_continuous(labels = scales::label_percent(scale = 100, prefix = "", suffix = ""), limits = c(0,1)) + ylab("Relative Abundance (%)")
+
+plot.temp.abx.noASV1 <- plot_bar(subset_samples(ps.rare.top15.noASV1, (ps.rare.top15.noASV1@sam_data$Phase == "Temperature challenge") & ps.rare.top15.noASV1@sam_data$Pretreatment == "Antibiotics"), x="CoralID", fill="GenusASV")
+plot.temp.abx.noASV1 <- plot.temp.abx.noASV1 + theme_bw() + guides(fill = guide_legend(title = "ASV")) +
+  theme(axis.text.x = element_text(angle = 90, face = "bold", size = 16), 
+        axis.text.y = element_blank(), 
+        axis.title.y = element_blank(), 
+        axis.title.x = element_blank(),
+        legend.position = "none",
+        panel.border = element_rect(fill = NA, colour = "black", linewidth = 1),
+        strip.background = element_rect(
+          color = "black", # Border color
+          fill = "white", # Background fill color of the strip
+          size = 1),
+        strip.text = element_text(face = "bold", size = 16)) + xlab("Samples") +
+  facet_wrap(~Pretreatment) + scale_fill_manual(values = colors.noASV1) + 
+  scale_y_continuous(labels = scales::label_percent(scale = 100, prefix = "", suffix = ""), limits = c(0,1)) + ylab("Relative Abundance (%)")
+
+plot.temp.temp.noASV1 <- plot_bar(subset_samples(ps.rare.top15.noASV1, (ps.rare.top15.noASV1@sam_data$Phase == "Temperature challenge") & ps.rare.top15.noASV1@sam_data$Pretreatment == "Temperature"), x="CoralID", fill="GenusASV")
+plot.temp.temp.noASV1 <- plot.temp.temp.noASV1 + theme_bw() + guides(fill = guide_legend(title = "ASV")) +
+  theme(axis.text.x = element_text(angle = 90, face = "bold", size = 16), 
+        axis.text.y = element_blank(), 
+        axis.title.y = element_blank(), 
+        axis.title.x = element_blank(),
+        legend.position = "none",
+        panel.border = element_rect(fill = NA, colour = "black", linewidth = 1),
+        strip.background = element_rect(
+          color = "black", # Border color
+          fill = "white", # Background fill color of the strip
+          size = 1),
+        strip.text = element_text(face = "bold", size = 16)) + xlab("Samples") +
+  facet_wrap(~Pretreatment) + scale_fill_manual(values = colors.noASV1) + 
+  scale_y_continuous(labels = scales::label_percent(scale = 100, prefix = "", suffix = ""), limits = c(0,1)) + ylab("Relative Abundance (%)")
+
+
+plot.temp.abxtemp.noASV1 <- plot_bar(subset_samples(ps.rare.top15.noASV1, (ps.rare.top15.noASV1@sam_data$Phase == "Temperature challenge") & ps.rare.top15.noASV1@sam_data$Pretreatment == "Antibiotics + Temperature"), x="CoralID", fill="GenusASV")
+plot.temp.abxtemp.noASV1 <- plot.temp.abxtemp.noASV1 + theme_bw() + guides(fill = guide_legend(title = "ASV")) +
+  theme(axis.text.x = element_text(angle = 90, face = "bold", size = 16), 
+        axis.text.y = element_blank(), 
+        axis.title.y = element_blank(), 
+        axis.title.x = element_blank(),
+        legend.text = element_text(face = "bold", size = 12),
+        legend.title = element_text(face = "bold", size = 14),
+        panel.border = element_rect(fill = NA, colour = "black", linewidth = 1),
+        strip.background = element_rect(
+          color = "black", # Border color
+          fill = "white", # Background fill color of the strip
+          size = 1),
+        strip.text = element_text(face = "bold", size = 16)) + xlab("Samples") +
+  facet_grid(Phase~Pretreatment) + scale_fill_manual(values = colors.noASV1)  + scale_y_continuous(labels = scales::label_percent(scale = 100, prefix = "", suffix = "")) + ylab("Relative Abundance (%)")
+
+ggarrange(plot.temp.no.noASV1, plot.temp.abx.noASV1, plot.temp.temp.noASV1, plot.temp.abxtemp.noASV1, ncol = 4, legend = "none") -> plot.temp
+
+ggarrange(plot.abx.challenge, plot.ramp, plot.temp, nrow = 3, common.legend = TRUE) -> x
+
+
+ggplot2::ggsave(here::here("Output Files/05 - Relative Abundance - Output/plot_relabund_noASV1_new.svg"), x,
+                height = 610, width = 750, units = "mm",
+                scale = 0.5, dpi = 1000)
