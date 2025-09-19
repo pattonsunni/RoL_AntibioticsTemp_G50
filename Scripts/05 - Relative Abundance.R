@@ -62,7 +62,7 @@ tax_table(ps.rare.top15) <- tax
 
 colors <- c("#66A61EFF", "#f38400", "#7570B3FF", "#2D2651FF", "#C969A1FF", "#be0032",
             "#dcd300", "#654522","#e25822", "#5D7298FF",
-            "#a1caf1", "#81B28DFF", "#A6761DFF", "#f38400", "#c2b280")
+            "#a1caf1", "#81B28DFF", "#A6761DFF", "#ffbc6d", "#c2b280")
 
 plot.relAbund.blank <- plot_bar(subset_samples(ps.rare.top15, ps.rare.top15@sam_data$Pretreatment == "No Treatment"), x="Sample", fill="GenusASV")
 
@@ -133,7 +133,7 @@ ggplot2::ggsave(here::here("Output Files/05 - Relative Abundance - Output/plot_r
 ## Plot mean relative abundance ====
 colors <- c("#66A61EFF", "#f38400", "#7570B3FF", "#2D2651FF", "#C969A1FF", "#be0032",
             "#dcd300", "#654522","#e25822", "#5D7298FF",
-            "#a1caf1", "#81B28DFF", "#A6761DFF", "#f38400", "#c2b280")
+            "#a1caf1", "#81B28DFF", "#A6761DFF", "#ffbc6d", "#c2b280")
 ## Blank
 melt.test <- psmelt(ps.rare.top15)
 
@@ -516,100 +516,9 @@ MRA.all <- MRA.all +
                        fill = "white", # Background fill color of the strip
                        size = 1.5)) +
   scale_fill_manual(values = colors)
-ggplot2::ggsave(here::here("Output Files/05 - Relative Abundance - Output/01 - plot_meanRelAbund_all.svg"), MRA.all,
+ggplot2::ggsave(here::here("Output Files/05 - Relative Abundance - Output/01 - plot_meanRelAbund_all.png"), MRA.all,
                 height = 450, width = 700, units = "mm",
                 scale = 0.5, dpi = 1000)
-
-## Plot relative abundance (Supplemental) ====
-as.data.frame(ps.rare.top15.noASV1@tax_table) -> tax
-tax$GenusASV <- paste0(tax$Genus, " (", tax$ASV, ")")
-as.matrix(tax) -> tax
-tax_table(ps.rare.top15.noASV1) <- tax
-
-### Relabel sample names for clearer plotting/ordering
-ps.rare.top15.noASV1@sam_data$CoralID <- gsub("T2_", "T02_", ps.rare.top15.noASV1@sam_data$CoralID) 
-ps.rare.top15.noASV1@sam_data$CoralID <- gsub("T5_", "T04_", ps.rare.top15.noASV1@sam_data$CoralID) 
-ps.rare.top15.noASV1@sam_data$CoralID <- gsub("T10_", "T09_", ps.rare.top15.noASV1@sam_data$CoralID) 
-ps.rare.top15.noASV1@sam_data$CoralID <- gsub("T15_", "T14_", ps.rare.top15.noASV1@sam_data$CoralID) 
-ps.rare.top15.noASV1@sam_data$CoralID <- gsub("T20_", "T19_", ps.rare.top15.noASV1@sam_data$CoralID) 
-ps.rare.top15.noASV1@sam_data$CoralID <- gsub("T25_", "T24_", ps.rare.top15.noASV1@sam_data$CoralID) 
-ps.rare.top15.noASV1@sam_data$CoralID <- gsub("T30_", "T29_", ps.rare.top15.noASV1@sam_data$CoralID) 
-ps.rare.top15.noASV1@sam_data$CoralID <- gsub("T35_", "T34_", ps.rare.top15.noASV1@sam_data$CoralID) 
-
-## Set colors
-colors.noASV1 <- c("#66A61EFF", "#f38400", "#2D2651FF", "#C969A1FF", "#be0032",
-                   "#dcd300", "#654522","#e25822", "#5D7298FF","#666666FF",
-                   "#a1caf1", "#81B28DFF", "#A6761DFF", "#f38400", "#c2b280")
-
-
-## Plot individual treatments
-### no treatment
-plot.relAbund.blank.noASV1 <- plot_bar(subset_samples(ps.rare.top15.noASV1, ps.rare.top15.noASV1@sam_data$Pretreatment == "No Treatment"), x="CoralID", fill="GenusASV")
-plot.relAbund.blank.noASV1 <- plot.relAbund.blank.noASV1 + theme_bw() + guides(fill = guide_legend(title = "ASV")) +
-  theme(axis.text.x = element_text(angle = 90, face = "bold", size = 20), 
-        axis.text.y = element_text(face = "bold", size = 20), 
-        axis.title.y = element_text(face = "bold", size = 26), 
-        axis.title.x = element_blank(),
-        panel.border = element_rect(fill = NA, colour = "black", linewidth = 1),
-        strip.background = element_rect(
-          color = "black", # Border color
-          fill = "white", # Background fill color of the strip
-          size = 1),
-        strip.text = element_text(face = "bold", size = 26)) + xlab("Samples") +
-  facet_wrap(~Pretreatment) + scale_fill_manual(values = colors.noASV1)  + scale_y_continuous(labels = scales::label_percent(scale = 100, prefix = "", suffix = "")) + ylab("Relative Abundance (%)")
-### antibiotics
-plot.relAbund.abx.noASV1 <- plot_bar(subset_samples(ps.rare.top15.noASV1, ps.rare.top15.noASV1@sam_data$Pretreatment == "Antibiotics"), x="CoralID", fill="GenusASV")
-
-plot.relAbund.abx.noASV1 <- plot.relAbund.abx.noASV1 + theme_bw() + guides(fill = guide_legend(title = "ASV")) +
-  theme(axis.text.x = element_text(angle = 90, face = "bold", size = 20), 
-        axis.text.y = element_text(face = "bold", size = 20), 
-        axis.title.y = element_blank(), 
-        axis.title.x = element_blank(),
-        legend.text = element_text(face = "bold", size = 20),
-        panel.border = element_rect(fill = NA, colour = "black", linewidth = 1),
-        strip.background = element_rect(
-          color = "black", # Border color
-          fill = "white", # Background fill color of the strip
-          size = 1),
-        strip.text = element_text(face = "bold", size = 26)) + xlab("Samples") +
-  facet_wrap(~Pretreatment) + scale_fill_manual(values = colors.noASV1)  + scale_y_continuous(labels = scales::label_percent(scale = 100, prefix = "", suffix = ""))
-## temperature
-plot.relAbund.temp.noASV1 <- plot_bar(subset_samples(ps.rare.top15.noASV1, ps.rare.top15.noASV1@sam_data$Pretreatment == "Temperature"), x="CoralID", fill="GenusASV")
-
-plot.relAbund.temp.noASV1 <- plot.relAbund.temp.noASV1 + theme_bw() + guides(fill = guide_legend(title = "ASV")) +
-  theme(axis.text.x = element_text(angle = 90, face = "bold", size = 20), 
-        axis.text.y = element_text(face = "bold", size = 20), 
-        axis.title.y = element_text(face = "bold", size = 26), 
-        axis.title.x = element_blank(),
-        panel.border = element_rect(fill = NA, colour = "black", linewidth = 1),
-        strip.background = element_rect(
-          color = "black", # Border color
-          fill = "white", # Background fill color of the strip
-          size = 1),
-        strip.text = element_text(face = "bold", size = 26)) + xlab("Samples") +
-  facet_wrap(~Pretreatment)+ scale_fill_manual(values = colors.noASV1)  + scale_y_continuous(labels = scales::label_percent(scale = 100, prefix = "", suffix = "")) + ylab("Relative Abundance (%)")
-## antibiotics + temperature
-plot.relAbund.tempabx.noASV1 <- plot_bar(subset_samples(ps.rare.top15.noASV1, ps.rare.top15.noASV1@sam_data$Pretreatment == "Antibiotics + Temperature"), x="CoralID", fill="GenusASV")
-
-plot.relAbund.tempabx.noASV1 <- plot.relAbund.tempabx.noASV1 + theme_bw() + guides(fill = guide_legend(title = "ASV", face = bold)) +
-  theme(axis.text.x = element_text(angle = 90, face = "bold", size = 20), 
-        axis.text.y = element_text(face = "bold", size = 20), 
-        axis.title.y = element_blank(), 
-        axis.title.x = element_blank(),
-        panel.border = element_rect(fill = NA, colour = "black", linewidth = 1),
-        strip.background = element_rect(
-          color = "black", # Border color
-          fill = "white", # Background fill color of the strip
-          size = 1),
-        strip.text = element_text(face = "bold", size = 26)) + xlab("Samples") +
-  facet_wrap(~Pretreatment)+ scale_fill_manual(values = colors.noASV1) + scale_y_continuous(labels = scales::label_percent(scale = 100, prefix = "", suffix = ""), limits = c(0,1)) 
-
-ggarrange(plot.relAbund.blank.noASV1, plot.relAbund.abx.noASV1, plot.relAbund.temp.noASV1, plot.relAbund.tempabx.noASV1, legend = "none") -> relabund_noASV1
-
-ggplot2::ggsave(here::here("Output Files/05 - Relative Abundance - Output/plot_RelAbund_noASV1.png"), relabund_noASV1,
-                height = 600, width = 1200, units = "mm",
-                scale = 0.5, dpi = 1000)
-
 
 ## Relative abundance when aquarickettsia removed ====
 ### load data
@@ -692,7 +601,13 @@ ps.rare.top15.noASV1@sam_data$CoralID <- gsub("T5", "T4", ps.rare.top15.noASV1@s
 
 ps.rare.top15.noASV1@sam_data$CoralID <- gsub("T9", "T09", ps.rare.top15.noASV1@sam_data$CoralID, ignore.case = FALSE)
 ps.rare.top15.noASV1@sam_data$CoralID <- gsub("T4", "T04", ps.rare.top15.noASV1@sam_data$CoralID, ignore.case = FALSE)
+ps.rare.top15.noASV1@sam_data$CoralID <- gsub("T2", "T02", ps.rare.top15.noASV1@sam_data$CoralID, ignore.case = FALSE)
+ps.rare.top15.noASV1@sam_data$CoralID <- gsub("T024", "T24", ps.rare.top15.noASV1@sam_data$CoralID, ignore.case = FALSE)
+ps.rare.top15.noASV1@sam_data$CoralID <- gsub("T029", "T29", ps.rare.top15.noASV1@sam_data$CoralID, ignore.case = FALSE)
 
+colors.noASV1 <- c("#66A61EFF", "#f38400", "#2D2651FF", "#C969A1FF", "#be0032",
+                   "#dcd300", "#654522","#e25822", "#5D7298FF","#666666FF",
+                   "#a1caf1", "#81B28DFF", "#A6761DFF", "#ffbc6d", "#c2b280")
 
 ## antibiotic challenge
 plot.abx.no.noASV1 <- plot_bar(subset_samples(ps.rare.top15.noASV1, (ps.rare.top15.noASV1@sam_data$Phase == "Antibiotic challenge") & ps.rare.top15.noASV1@sam_data$Pretreatment == "No Treatment"), x="CoralID", fill="GenusASV")
