@@ -1,5 +1,5 @@
 # Author: Sunni Patton
-# Last edited: 10/18/24
+# Last edited: 11/12/25
 # Title: Running decontam
 
 # Code largely adapted from https://benjjneb.github.io/decontam/vignettes/decontam_intro.html
